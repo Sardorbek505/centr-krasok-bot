@@ -26,7 +26,7 @@
 ### Что было сделано:
 
 - **Сбор данных** — спарсен официальный сайт centr-krasok.kz, извлечено и структурировано 6000+ символов актуальной информации: контакты, адреса, 20+ категорий товаров, 40+ брендов, партнёры, условия доставки, цены
-- **AI-интеграция** — подключён Groq API (LLaMA 3.3 70B) со строгим system prompt, ограничивающим галлюцинации
+- **AI-интеграция** — подключён Groq API (LLaMA 3.1 8b Instant) со строгим system prompt, ограничивающим галлюцинации
 - **Голосовой ввод** — Groq Whisper large-v3-turbo распознаёт русскую речь прямо в боте
 - **UX** — inline-кнопки быстрых вопросов, оценка ответов 👍👎, индикатор набора
 - **Аналитика** — SQLite БД логирует пользователей, сообщения и оценки; `/stats` для администратора
@@ -77,7 +77,7 @@ centr_krasok_bot/
                                                              │
                                               System Prompt + Knowledge Base
                                                              │
-                                               Groq LLaMA 3.3 70B
+                                               Groq LLaMA 3.1 8b Instant
                                                              │
                                                     Ответ + 👍👎 кнопки
                                                              │
@@ -122,7 +122,7 @@ python bot.py
 ```env
 TELEGRAM_BOT_TOKEN=ваш_токен_от_BotFather
 GROQ_API_KEY=ваш_ключ_от_Groq
-GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_MODEL=llama-3.1-8b-instant
 ADMIN_TELEGRAM_ID=ваш_telegram_id   # узнать у @userinfobot
 ```
 
@@ -222,7 +222,7 @@ sudo systemctl status centr-krasok-bot   # ✅ active (running)
 |-----------|--------|-----------|
 | Python | 3.11+ | Основной язык |
 | python-telegram-bot | 21.6 | Async Telegram API |
-| Groq API (LLaMA 3.3 70B) | latest | AI ответы |
+| Groq API (LLaMA 3.1 8b Instant) | latest | AI ответы |
 | Groq Whisper large-v3-turbo | latest | Speech-to-Text |
 | SQLite | встроен | Аналитика и логирование |
 | python-dotenv | 1.0.1 | Управление конфигурацией |
