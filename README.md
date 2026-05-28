@@ -11,6 +11,8 @@
 [![SQLite](https://img.shields.io/badge/SQLite-Analytics-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://sqlite.org)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
+![Banner](banner.png)
+
 > Тестовое задание: разработка AI Telegram-ассистента на основе реальных данных компании [centr-krasok.kz](https://centr-krasok.kz)
 
 </div>

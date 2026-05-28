@@ -154,11 +154,23 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     upsert_user(user.id, user.username, user.first_name)
     ai_handler.clear_history(user.id)
     logger.info("User %d started", user.id)
-    await update.message.reply_text(
-        WELCOME_TEXT,
-        parse_mode=ParseMode.MARKDOWN,
-        reply_markup=QUICK_QUESTIONS_KEYBOARD,
-    )
+    # Send welcome image if it exists
+    import os as _os
+    welcome_img = _os.path.join(_os.path.dirname(__file__), "welcome.png")
+    if _os.path.exists(welcome_img):
+        with open(welcome_img, "rb") as img_f:
+            await update.message.reply_photo(
+                photo=img_f,
+                caption=WELCOME_TEXT,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=QUICK_QUESTIONS_KEYBOARD,
+            )
+    else:
+        await update.message.reply_text(
+            WELCOME_TEXT,
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=QUICK_QUESTIONS_KEYBOARD,
+        )
 
 
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
