@@ -15,6 +15,8 @@
 
 > Тестовое задание: разработка AI Telegram-ассистента на основе реальных данных компании [centr-krasok.kz](https://centr-krasok.kz)
 
+**🤖 Живой бот развёрнут и работает 24/7 — попробуйте прямо сейчас!**
+
 </div>
 
 ---
@@ -183,12 +185,27 @@ ADMIN_TELEGRAM_ID=ваш_telegram_id   # узнать у @userinfobot
 
 ---
 
-## 🚀 Деплой на сервер (Ubuntu)
+## 🚀 Деплой
 
-```bash
-# Создать systemd сервис
-sudo nano /etc/systemd/system/centr-krasok-bot.service
-```
+Бот развёрнут на **[Render](https://render.com)** в режиме **webhook** и работает 24/7.
+Поддерживается автоматический выбор режима:
+
+- **Локально** (`WEBHOOK_URL` не задан) → polling
+- **На сервере** (`WEBHOOK_URL` задан) → webhook (`app.run_webhook`)
+
+В репозитории есть готовые конфиги: `Dockerfile`, `render.yaml`, `Procfile`, `railway.json`.
+
+### Деплой на Render (бесплатно)
+
+1. Подключить GitHub-репозиторий как **Web Service**
+2. Указать переменные окружения:
+   `TELEGRAM_BOT_TOKEN`, `GROQ_API_KEY`, `ADMIN_TELEGRAM_ID`, `WEBHOOK_URL`
+3. Render автоматически соберёт образ по `Dockerfile` и запустит бота
+
+> На бесплатном тарифе сервис засыпает после 15 минут простоя — поэтому
+> подключён внешний пинг (UptimeRobot) каждые 5 минут для поддержания онлайн.
+
+### Альтернатива — systemd (свой сервер Ubuntu)
 
 ```ini
 [Unit]
@@ -209,8 +226,7 @@ WantedBy=multi-user.target
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable centr-krasok-bot
-sudo systemctl start centr-krasok-bot
+sudo systemctl enable --now centr-krasok-bot
 sudo systemctl status centr-krasok-bot   # ✅ active (running)
 ```
 
