@@ -132,21 +132,24 @@ async def send_ai_reply(update: Update, user_id: int, question: str) -> None:
         await update.effective_message.reply_text(ERROR_TEXT)
         return
 
-    # Отправляем ответ с кнопками оценки
+    # Отправляем ответ БЕЗ кнопок сначала
     try:
         sent = await update.effective_message.reply_text(
             answer,
             parse_mode=ParseMode.MARKDOWN,
-            reply_markup=feedback_keyboard(update.effective_message.message_id),
         )
     except TelegramError:
-        sent = await update.effective_message.reply_text(
-            answer,
-            reply_markup=feedback_keyboard(update.effective_message.message_id),
-        )
+        sent = await update.effective_message.reply_text(answer)
 
-    # Сохраняем Q&A для возможного фидбека; ограничиваем размер кэша
-    _last_qa[update.effective_message.message_id] = (question, answer)
+    # Теперь добавляем кнопки оценки с правильным message_id
+    try:
+        await sent.edit_reply_markup(reply_markup=feedback_keyboard(sent.message_id))
+    except TelegramError:
+        pass
+
+    # Сохраняем Q&A под ключом сообщения с ответом (sent.message_id)
+    # чтобы найти его при нажатии кнопки оценки
+    _last_qa[sent.message_id] = (question, answer)
     if len(_last_qa) > _MAX_QA_CACHE:
         oldest = next(iter(_last_qa))
         del _last_qa[oldest]
