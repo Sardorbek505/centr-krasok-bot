@@ -28,7 +28,7 @@ from telegram.ext import (
 from telegram.error import TelegramError
 from groq import AsyncGroq
 
-from config import TELEGRAM_BOT_TOKEN, MAX_REQUESTS_PER_MINUTE, GROQ_API_KEY, ADMIN_ID, validate_config
+from config import TELEGRAM_BOT_TOKEN, MAX_REQUESTS_PER_MINUTE, GROQ_API_KEY, ADMIN_ID, validate_config, WEBHOOK_URL, PORT
 from ai_handler import ai_handler
 from database import init_db, upsert_user, increment_message, save_feedback, get_stats
 
@@ -367,8 +367,18 @@ def main() -> None:
 
     app.add_error_handler(error_handler)
 
-    logger.info("Bot is running. Press Ctrl+C to stop.")
-    app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
+    if WEBHOOK_URL:
+        logger.info("Starting in WEBHOOK mode on port %d ...", PORT)
+        app.run_webhook(
+            listen="0.0.0.0",
+            port=PORT,
+            webhook_url=f"{WEBHOOK_URL}/webhook",
+            allowed_updates=Update.ALL_TYPES,
+            drop_pending_updates=True,
+        )
+    else:
+        logger.info("Starting in POLLING mode. Press Ctrl+C to stop.")
+        app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
 
 
 if __name__ == "__main__":

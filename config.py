@@ -28,6 +28,12 @@ TEMPERATURE: float = 0.4
 # ─── Rate limiting ───────────────────────────────────────────
 MAX_REQUESTS_PER_MINUTE: int = 15
 
+# ─── Webhook (для Render / облачного хостинга) ───────────────
+# Если WEBHOOK_URL задан — бот запускается в webhook-режиме.
+# Иначе — polling (для локального запуска).
+WEBHOOK_URL: str = os.getenv("WEBHOOK_URL", "")   # https://your-app.onrender.com
+PORT: int = int(os.getenv("PORT", "8080"))
+
 
 def validate_config() -> None:
     missing = []
