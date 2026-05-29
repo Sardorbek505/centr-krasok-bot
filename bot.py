@@ -13,12 +13,14 @@ AI Telegram-бот «Центр Красок #1» — Enhanced Version.
 Запуск: python bot.py
 """
 
+import asyncio
 import logging
 import time
 import os
 import tempfile
 from collections import defaultdict
 
+import httpx
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ChatAction, ParseMode
 from telegram.ext import (
@@ -161,9 +163,12 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     upsert_user(user.id, user.username, user.first_name)
     ai_handler.clear_history(user.id)
     logger.info("User %d started", user.id)
-    # Send welcome image if it exists
+    # Send welcome image if it exists (JPEG — лёгкий, быстро грузится)
     from pathlib import Path as _Path
-    welcome_img = _Path(__file__).parent / "welcome.png"
+    _base = _Path(__file__).parent
+    welcome_img = _base / "welcome.jpg"
+    if not welcome_img.exists():
+        welcome_img = _base / "welcome.png"
     if welcome_img.exists():
         await update.message.reply_photo(
             photo=welcome_img.open("rb"),
@@ -342,13 +347,43 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
     logger.error("Error: %s", context.error, exc_info=context.error)
 
 
+# ─── Keep-alive (анти-засыпание Render free-tier) ─────────────────────────────
+async def _keep_alive_loop() -> None:
+    """
+    Каждые 10 минут пингует собственный публичный URL, чтобы Render
+    не усыплял бесплатный инстанс после 15 минут простоя.
+    Без этого первое сообщение после паузы ждёт ~50 сек холодного старта.
+    """
+    await asyncio.sleep(60)  # даём серверу подняться
+    while True:
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                await client.get(WEBHOOK_URL)
+            logger.info("Keep-alive ping → %s", WEBHOOK_URL)
+        except Exception as e:  # noqa: BLE001 — пинг не должен ронять бота
+            logger.warning("Keep-alive ping failed: %s", e)
+        await asyncio.sleep(600)  # 10 минут
+
+
+async def _post_init(app: Application) -> None:
+    """Запускает фоновый keep-alive только в webhook-режиме (на сервере)."""
+    if WEBHOOK_URL:
+        asyncio.create_task(_keep_alive_loop())
+        logger.info("Keep-alive task scheduled (every 10 min)")
+
+
 # ─── Точка входа ──────────────────────────────────────────────────────────────
 def main() -> None:
     validate_config()
     init_db()
     logger.info("Starting «Центр Красок #1» AI bot (Enhanced)...")
 
-    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    app = (
+        Application.builder()
+        .token(TELEGRAM_BOT_TOKEN)
+        .post_init(_post_init)
+        .build()
+    )
 
     # Команды
     app.add_handler(CommandHandler("start",  cmd_start))
