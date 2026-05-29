@@ -57,6 +57,7 @@ def is_rate_limited(user_id: int) -> bool:
 # ─── Хранилище последних Q&A для фидбека ─────────────────────────────────────
 # message_id → (question, answer)
 _last_qa: dict[int, tuple[str, str]] = {}
+_MAX_QA_CACHE = 2000  # максимум записей (защита от утечки памяти)
 
 # ─── Клавиатуры ───────────────────────────────────────────────────────────────
 QUICK_QUESTIONS_KEYBOARD = InlineKeyboardMarkup([
@@ -144,8 +145,11 @@ async def send_ai_reply(update: Update, user_id: int, question: str) -> None:
             reply_markup=feedback_keyboard(update.effective_message.message_id),
         )
 
-    # Сохраняем Q&A для возможного фидбека
+    # Сохраняем Q&A для возможного фидбека; ограничиваем размер кэша
     _last_qa[update.effective_message.message_id] = (question, answer)
+    if len(_last_qa) > _MAX_QA_CACHE:
+        oldest = next(iter(_last_qa))
+        del _last_qa[oldest]
 
 
 # ─── Команды ──────────────────────────────────────────────────────────────────
@@ -296,6 +300,9 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     # ── Быстрые вопросы ──
     if data in QUICK_Q_MAP:
+        if is_rate_limited(user.id):
+            await query.message.reply_text(RATE_LIMIT_TEXT)
+            return
         question = QUICK_Q_MAP[data]
         upsert_user(user.id, user.username, user.first_name)
         increment_message(user.id)
